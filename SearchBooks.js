@@ -22,39 +22,31 @@ class SearchBooks extends Component {
     /** List of books returned from the query */
     searchBooks: []
   }
-  /** searches BooksAPI for the query and updates state based on returned book object*/
-  /** TODO : shorthand these IF statements */
   updateQuery = (query) => {
     this.setState(() => ({query}))
     if (query!==""){
       BooksAPI.search(query)
       .then((searchBooks) => {
-        if(searchBooks.length){this.setState(() => ({
-          searchBooks
-        }))}else{
+        if(query === this.state.query && searchBooks.length){
+          this.setState(() => ({
+            searchBooks:searchBooks.map((book) => {
+              const bk = this.props.books.find(b => b.id === book.id)
+              if(bk){book.shelf=bk.shelf}
+              else{book.shelf="none"}
+              return book
+            })
+          }))
+        }else{
           this.setState(() => ({
             searchBooks:[]
           }))
         }
       })
-    }else{
-    	this.setState(() => ({
-          searchBooks:[]
-        }))
     }
-    
   }
   render() {
     const { query, searchBooks }  = this.state
-    const { books, onBookChange }  = this.props
-    /** TODO : move this out of render */
-    /** TODO : tidy up IF statement */
-	  const joinedList = searchBooks.map((book) => {
-      const bk = books.find(b => b.id === book.id)
-      if(bk){book.shelf=bk.shelf}
-      else{book.shelf="none"}
-      return book
-    })  
+    const { onBookChange }  = this.props
     return(
       <div className="search-books">
             <div className="search-books-bar">
@@ -71,7 +63,7 @@ class SearchBooks extends Component {
               </div>
             </div>
             <div className="search-books-results">
-              <BooksGrid onBookChange={onBookChange} filteredBooks={joinedList} />
+              { (searchBooks.length && (<BooksGrid onBookChange={onBookChange} filteredBooks={searchBooks}/>)) || (<p>no results</p>) }     
             </div>
           </div>
     )
